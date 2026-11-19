@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E6B5C">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Claude 주식 분석 가이드</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap">
+<style>
+/* Layout: 왼쪽 고정 목차 + 본문 한 열. 폰에서는 목차가 상단 가로 스크롤 바로 바뀜. 색은 먹색 종이 + 청록 포인트 */
+:root {
+  --bg: #F6F7F5;
+  --surface: #FFFFFF;
+  --ink: #1B2321;
+  --ink-soft: #55615D;
+  --line: #DDE2DF;
+  --accent: #0E6B5C;
+  --accent-soft: #DCEFEA;
+  --warn: #9A5B00;
+  --warn-soft: #FBF0DA;
+  --code-bg: #EEF1EF;
+  --font-body: "Noto Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --font-head: "Noto Serif KR", "Noto Sans KR", serif;
+  --font-mono: "IBM Plex Mono", "Noto Sans KR", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121816; --surface: #1A2220; --ink: #E7ECEA; --ink-soft: #9FACA7; --line: #2C3733;
+    --accent: #5CCBB6; --accent-soft: #1B3A34; --warn: #E7B861; --warn-soft: #3A2E15; --code-bg: #212B28;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121816; --surface: #1A2220; --ink: #E7ECEA; --ink-soft: #9FACA7; --line: #2C3733;
+  --accent: #5CCBB6; --accent-soft: #1B3A34; --warn: #E7B861; --warn-soft: #3A2E15; --code-bg: #212B28;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.75; margin: 0; }
+.wrap { max-width: 1060px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 40px; }
+.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; display: flex; flex-direction: column; gap: 2px; }
+.toc .brand { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 10px; }
+.toc a { color: var(--ink-soft); text-decoration: none; padding: 6px 10px; border-left: 2px solid var(--line); font-size: 14px; }
+.toc a:hover { color: var(--ink); }
+.toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 700; background: var(--accent-soft); }
+main { min-width: 0; display: flex; flex-direction: column; gap: 56px; }
+h1 { font-family: var(--font-head); font-size: clamp(26px, 4.2vw, 38px); line-height: 1.3; margin: 0 0 12px; text-wrap: balance; }
+h2 { font-family: var(--font-head); font-size: 24px; margin: 0 0 6px; text-wrap: balance; scroll-margin-top: 24px; }
+h3 { font-size: 16px; margin: 0 0 6px; }
+.lead { color: var(--ink-soft); max-width: 62ch; margin: 0; }
+.sub { color: var(--ink-soft); margin: 0 0 18px; max-width: 62ch; }
+section { scroll-margin-top: 24px; }
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 22px; }
+.flow div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 14px; }
+.flow b { display: block; color: var(--accent); font-size: 14px; margin-bottom: 2px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 99px; margin-bottom: 8px; }
+.q { font-family: var(--font-head); font-size: 18px; margin: 0 0 8px; }
+.easy { background: var(--accent-soft); border-radius: 8px; padding: 10px 14px; margin: 10px 0; font-size: 14px; }
+.easy b { color: var(--accent); }
+.promptbox { position: relative; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 84px 12px 14px; font-size: 14px; margin: 10px 0; }
+.promptbox .t { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.copy { position: absolute; top: 8px; right: 8px; font: 500 12px var(--font-body); background: var(--surface); color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.copy:hover { background: var(--accent); color: var(--bg); }
+.copy:focus-visible, .stock input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ul { margin: 6px 0; padding-left: 20px; }
+li { margin: 3px 0; }
+.read { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.read div { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+.read .hi { border-color: var(--accent); }
+.read span { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); margin-bottom: 2px; }
+.counter { background: var(--warn-soft); color: var(--ink); border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 14px; }
+.counter b { color: var(--warn); }
+.stock { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 5; }
+.stock label { font-weight: 700; font-size: 14px; }
+.stock input { flex: 1 1 200px; min-width: 0; font: 15px var(--font-body); padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+.stock small { color: var(--ink-soft); flex-basis: 100%; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; color: var(--ink-soft); font-weight: 500; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.two .card { margin: 0; }
+.note { color: var(--ink-soft); font-size: 13px; margin-top: 18px; }
+@media (max-width: 780px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-block: 0 56px; }
+  .toc { flex-direction: row; overflow-x: auto; top: env(safe-area-inset-top, 0px); background: var(--bg); padding: 10px 0; z-index: 10; gap: 6px; border-bottom: 1px solid var(--line); }
+  .toc .brand { display: none; }
+  .toc a { border-left: 0; border-bottom: 2px solid var(--line); white-space: nowrap; }
+  .toc a.on { border-bottom-color: var(--accent); }
+  .flow, .read, .two { grid-template-columns: minmax(0, 1fr); }
+  .stock { top: calc(env(safe-area-inset-top, 0px) + 52px); }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <nav class="toc" aria-label="목차">
+    <div class="brand">목차</div>
+    <a href="#top" class="on">한눈에 보기</a>
+    <a href="#core">핵심 질문 3가지</a>
+    <a href="#prompts">프롬프트 7개</a>
+    <a href="#report">보고서 양식</a>
+    <a href="#limits">장점과 한계</a>
+    <a href="#terms">용어 풀이</a>
+  </nav>
+
+  <main>
+    <section id="top">
+      <h1>Claude로 주식 보는 순서</h1>
+      <p class="lead">공개 데이터를 Claude에 넣고, 정해진 질문 세 가지부터 물어보고, 보고서 양식까지 지정하는 방법을 정리했습니다. 숫자보다 "그래서 무슨 뜻인지"를 얻는 것이 핵심입니다.</p>
+      <div class="flow">
+        <div><b>1. 데이터 입력</b>공시·실적·지수 구성 같은 공개 자료</div>
+        <div><b>2. 핵심 질문 3개</b>평균 단가 · 비중 대비 실적 · 지수 편입</div>
+        <div><b>3. 양식 지정</b>결론 → 숫자 → 해석 → 반대 근거</div>
+        <div><b>4. "그래서?"</b>무슨 뜻인지 다시 한 번 확인</div>
+      </div>
+    </section>
+
+    <section id="core">
+      <h2>핵심 질문 3가지</h2>
+      <p class="sub">공개 데이터를 넣은 뒤 가장 먼저 물어볼 세 가지입니다. 아래 "프롬프트 복사"를 누르면 그대로 붙여넣을 수 있습니다.</p>
+      <div id="coreList"></div>
+    </section>
+
+    <section id="prompts">
+      <h2>프롬프트 7개 세트</h2>
+      <p class="sub">종목명을 한 번만 적으면 7개 프롬프트 앞에 모두 들어갑니다. 한 종목을 위에서 아래로 순서대로 돌려 보세요.</p>
+      <div class="stock">
+        <label for="stock">분석할 종목</label>
+        <input id="stock" type="text" placeholder="예: 삼성전자 (비워 두면 종목명 없이 복사)" autocomplete="off">
+        <small>입력한 종목명은 이 화면에서만 쓰이고 저장되지 않습니다.</small>
+      </div>
+      <div id="promptList"></div>
+    </section>
+
+    <section id="report">
+      <h2>보고서 양식과 쉬운 해석</h2>
+      <p class="sub">양식을 먼저 정해 주면 Claude가 숫자 나열 대신 해석까지 써 줍니다.</p>
+      <div class="card">
+        <span class="tag">양식 예시</span>
+        <div class="promptbox"><pre class="t" id="tpl" style="margin:0;font-family:inherit">1. 한 줄 결론: (그래서 무슨 뜻인지 한 문장)
+2. 핵심 숫자: (표 3개 이내)
+3. 해석: (숫자가 실적·주가에 미치는 의미)
+4. 반대 근거: (내 결론이 틀릴 수 있는 지점)
+5. 확인할 것: (다음에 봐야 할 데이터)</pre><button class="copy" data-copy-id="tpl">양식 복사</button></div>
+      </div>
+      <div class="card">
+        <h3>해석 요령 3가지</h3>
+        <ul>
+          <li>숫자만 나열한 답이 나오면 "그래서 무슨 뜻이야?"를 다시 던집니다.</li>
+          <li>"~것으로 예상됩니다" 같은 추측 표현이 나오면 근거 데이터를 함께 요구합니다.</li>
+          <li>결론과 반대되는 근거를 반드시 같이 물어봅니다. 한쪽으로 치우친 결론을 걸러 줍니다.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="limits">
+      <h2>장점과 한계</h2>
+      <p class="sub">이 방법은 분석 틀이고, 투자 조언이나 수익 보장이 아닙니다.</p>
+      <div class="two">
+        <div class="card"><h3>장점</h3><ul>
+          <li>공개 데이터로 시작해서 비용이 들지 않습니다.</li>
+          <li>질문이 정해져 있어 초보자도 반복할 수 있습니다.</li>
+          <li>수급 → 실적 → 지수 편입 순서로 물으면 종목의 수급 구조가 정리됩니다.</li>
+        </ul></div>
+        <div class="card"><h3>한계</h3><ul>
+          <li>샘플은 과거 데이터로 계산한 예시입니다.</li>
+          <li>입력 데이터가 틀리면 계산도 틀립니다. 공시와 실적 원본을 함께 넣어 검증하세요.</li>
+          <li>평균 매수단가와 편입 물량은 추정값이라 실제 수급과 다를 수 있습니다.</li>
+        </ul></div>
+      </div>
+    </section>
+
+    <section id="terms">
+      <h2>용어 풀이</h2>
+      <p class="sub">영어 약자와 처음 보는 말을 풀어 두었습니다.</p>
+      <div class="card tbl">
+        <table>
+          <thead><tr><th>용어</th><th>풀네임</th><th>쉬운 뜻</th></tr></thead>
+          <tbody>
+            <tr><td>가중평균 단가</td><td>Volume-Weighted Average Price (VWAP와 비슷한 개념)</td><td>많이 산 날의 가격에 더 큰 비중을 주고 구한 평균 매수 가격</td></tr>
+            <tr><td>순매수</td><td>산 수량 − 판 수량</td><td>플러스면 사는 쪽이 더 많았다는 뜻</td></tr>
+            <tr><td>KOSPI 200</td><td>Korea Composite Stock Price Index 200</td><td>유가증권시장의 대표 200개 종목으로 만든 지수</td></tr>
+            <tr><td>KOSDAQ</td><td>Korea Securities Dealers Automated Quotations</td><td>중소·벤처 기업 중심의 코스닥 시장</td></tr>
+            <tr><td>MSCI</td><td>Morgan Stanley Capital International</td><td>해외 투자기관이 많이 따라 쓰는 글로벌 주가지수 회사</td></tr>
+            <tr><td>PER</td><td>Price Earnings Ratio (주가수익비율)</td><td>주가가 1년 이익의 몇 배인지. 낮을수록 이익 대비 싸다는 뜻</td></tr>
+            <tr><td>수동 추적 펀드</td><td>Passive (Index-Tracking) Fund</td><td>지수가 바뀌면 같은 종목을 그대로 사고파는 펀드</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">이 페이지는 학습용 정리이며 투자 권유가 아닙니다. 매수가·목표가·손절가 같은 표현은 데이터 해석 예시입니다.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  var CORE = [
+    { tag: "질문 1", q: "최근 평균 얼마에 샀는지 (평균 매수단가)",
+      what: "특정 종목이나 테마에서 수급 주체(외국인·기관)의 최근 평균 체결가를 구합니다.",
+      easy: "최근 20거래일 동안 외국인·기관이 산 가격을 수량으로 가중해 평균을 냅니다. 그 평균과 지금 가격을 비교하면, 그들이 지금 이익인지 손해인지 알 수 있습니다.",
+      prompt: "아래 데이터에서 최근 20거래일 외국인·기관 순매수 물량의 가중평균 단가를 계산하고, 현재가와 비교해서 해석해줘.",
+      hi: ["현재가가 평균 매수단가보다 높음", "수급 주체가 수익 중 → 조심스러운 구간"],
+      lo: ["현재가가 평균 매수단가보다 낮음", "수급 주체가 물린 구간 → 반등 기대는 별도 근거 필요"],
+      counter: "수익 중인 구간이라고 곧바로 조심 신호는 아닙니다. 평균 단가 위에서 순매수가 계속 늘고 있다면 추세가 이어지는 모습일 수도 있으니, 순매수의 추이를 함께 물어보세요." },
+    { tag: "질문 2", q: "보유 비중은 낮은데 실적은 좋아졌는지",
+      what: "기관·펀드의 보유 비중은 아직 낮은데 매출과 영업이익이 개선 중인지 봅니다.",
+      easy: "기관이 아직 많이 담지 않았는데 회사 실적은 좋아지고 있다면, 앞으로 기관이 사 줄 여지가 남아 있다는 뜻입니다.",
+      prompt: "이 기업의 최근 4개 분기 실적 변화와 기관 보유비중 추이를 비교해서, 비중 대비 실적 개선 여부를 표로 정리해줘.",
+      hi: ["보유비중 낮음 + 실적 개선", "기관 신규 편입 여력이 있는 조합"],
+      lo: ["실적은 나빠졌는데 비중만 높음", "위험 신호"],
+      counter: "비중이 낮은 데에는 이유가 있을 수 있습니다. 유동성(거래대금)이나 시가총액이 작아서 기관이 못 담는 경우도 같이 확인하세요." },
+    { tag: "질문 3", q: "지수 편입 시 예상 매수 규모는 얼마인지",
+      what: "KOSPI·KOSDAQ·MSCI 같은 지수에 새로 들어갈 때, 지수를 따라가는 펀드가 의무적으로 사야 하는 물량을 추정합니다.",
+      easy: "지수 펀드는 지수에 들어온 종목을 규칙대로 사야 합니다. 종목의 시가총액 비중에 추적 펀드 규모를 곱하면 대략의 매수 물량이 나옵니다.",
+      prompt: "이 종목이 KOSPI 200에 편입된다면, 시가총액 비중과 추적 펀드 규모를 기준으로 예상 수요 물량을 계산해줘.",
+      hi: ["예상 매수 규모가 큼", "편입 시점 전후로 수급 수요가 집중됨"],
+      lo: ["과거 사례를 함께 확인", "편입 발표 → 시행 사이 주가가 어떻게 움직였는지 비교"],
+      counter: "편입이 이미 시장에 알려져 주가에 반영됐을 수 있습니다. 발표 이후 주가가 얼마나 올랐는지도 같이 보세요." }
+  ];
+  var PROMPTS = [
+    ["수급 분석", "최근 거래일별 투자자별 매매 동향 데이터에서 수급 주체별 평균 단가를 계산해줘."],
+    ["실적 개선 확인", "최근 4개 분기 매출·영업이익률 추이를 표로 만들고, 개선/악화 이유를 해석해줘."],
+    ["보유비중 대비 실적", "기관 보유비중은 낮은데 실적은 좋아졌는지 비교 분석해줘."],
+    ["지수 편입 물량 추정", "지수 편입 시 예상 매수 규모를 추적 펀드 규모 기준으로 계산해줘."],
+    ["경쟁사 비교", "동종업계 경쟁사와 영업이익률·PER을 비교 표로 정리해줘."],
+    ["수출입 데이터 연결", "관세청 수출입 통계에서 이 기업 품목의 최근 수출 증감률을 찾아 실적과 연결해서 해석해줘."],
+    ["종합 보고서", "위 분석을 바탕으로 매수가/목표가/손절가 관점의 시나리오를 표로 정리해줘. (투자 조언이 아니라 데이터 해석 예시로)"]
+  ];
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function copyText(text, btn) {
+    function done(ok) { var old = btn.getAttribute("data-label") || btn.textContent; btn.setAttribute("data-label", old); btn.textContent = ok ? "복사됨" : "직접 선택해 복사"; setTimeout(function () { btn.textContent = old; }, 1600); }
+    function fallback() {
+      try { var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); var ok = document.execCommand("copy"); document.body.removeChild(ta); done(ok); } catch (e) { done(false); }
+    }
+    try { navigator.clipboard.writeText(text).then(function () { done(true); }, fallback); } catch (e) { fallback(); }
+  }
+
+  var stockInput = document.getElementById("stock");
+  function stockPrefix() { var v = (stockInput.value || "").trim(); return v ? "[분석 종목: " + v + "] " : ""; }
+  var promptNodes = [];
+
+  function makeBox(textNode, getText) {
+    var box = el("div", "promptbox"); box.appendChild(textNode);
+    var b = el("button", "copy", "프롬프트 복사"); b.type = "button";
+    b.addEventListener("click", function () { copyText(getText(), b); });
+    box.appendChild(b); return box;
+  }
+
+  var coreList = document.getElementById("coreList");
+  CORE.forEach(function (c) {
+    var card = el("div", "card");
+    card.appendChild(el("span", "tag", c.tag));
+    card.appendChild(el("h3", "q", c.q));
+    card.appendChild(el("p", null, c.what)).style.margin = "0";
+    var easy = el("div", "easy"); var eb = el("b", null, "쉽게 풀면 "); easy.appendChild(eb); easy.appendChild(document.createTextNode(c.easy)); card.appendChild(easy);
+    var t = el("p", "t", c.prompt); promptNodes.push({ node: t, text: c.prompt });
+    card.appendChild(makeBox(t, function () { return c.prompt; }));
+    var read = el("div", "read");
+    var h = el("div", "hi"); h.appendChild(el("span", null, "이럴 때")); h.appendChild(el("strong", null, c.hi[0])); h.appendChild(el("div", null, c.hi[1]));
+    var l = el("div"); l.appendChild(el("span", null, "반대로")); l.appendChild(el("strong", null, c.lo[0])); l.appendChild(el("div", null, c.lo[1]));
+    read.appendChild(h); read.appendChild(l); card.appendChild(read);
+    var ct = el("div", "counter"); ct.appendChild(el("b", null, "반대 시각 ")); ct.appendChild(document.createTextNode(c.counter)); card.appendChild(ct);
+    coreList.appendChild(card);
+  });
+
+  var pl = document.getElementById("promptList");
+  PROMPTS.forEach(function (p, i) {
+    var card = el("div", "card");
+    card.appendChild(el("span", "tag", "프롬프트 " + (i + 1)));
+    card.appendChild(el("h3", null, p[0]));
+    var t = el("p", "t", p[1]); promptNodes.push({ node: t, text: p[1] });
+    card.appendChild(makeBox(t, function () { return stockPrefix() + p[1]; }));
+    pl.appendChild(card);
+  });
+  stockInput.addEventListener("input", function () {
+    var pre = stockPrefix();
+    for (var i = 3; i < promptNodes.length; i++) promptNodes[i].node.textContent = pre + promptNodes[i].text;
+  });
+
+  document.querySelectorAll("[data-copy-id]").forEach(function (b) {
+    b.addEventListener("click", function () { copyText(document.getElementById(b.getAttribute("data-copy-id")).textContent, b); });
+  });
+
+  // 목차 스크롤 추적
+  var links = Array.prototype.slice.call(document.querySelectorAll(".toc a"));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+  function spy() {
+    var y = window.scrollY + 120, idx = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) idx = i; });
+    links.forEach(function (a, i) { a.classList.toggle("on", i === idx); });
+  }
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+})();
+</script>
+
+</body>
+</html>
